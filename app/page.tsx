@@ -69,22 +69,36 @@
 //     </div>
 //   );
 // }
+
 "use client";
 import { useState } from "react";
-import { generateClient } from 'aws-amplify/data';
-import { type Schema } from '@/amplify/data/resource'; // adjust the path to where your schema file is
+import { generateClient } from "aws-amplify/data";
+import { type Schema } from "@/amplify/data/resource";
 
 const client = generateClient<Schema>();
 
-export default function Home() {
-  const [form, setForm] = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
+type FormFields = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
-  const handleChange = (e) => {
+export default function Home() {
+  const [form, setForm] = useState<FormFields>({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
       return;
@@ -96,11 +110,10 @@ export default function Home() {
         email: form.email,
         password: form.password,
       });
-
-      alert("User registered successfully");
+      alert("User registered!");
       setForm({ fullName: "", email: "", password: "", confirmPassword: "" });
-    } catch (error) {
-      console.error("Error creating user:", error);
+    } catch (err) {
+      console.error("Error registering user:", err);
       alert("Registration failed");
     }
   };
@@ -112,14 +125,25 @@ export default function Home() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
           {["fullName", "email", "password", "confirmPassword"].map((field) => (
             <div key={field} className="flex flex-col">
-              <label htmlFor={field} className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {field === "confirmPassword" ? "Confirm Password" : field.charAt(0).toUpperCase() + field.slice(1)}
+              <label
+                htmlFor={field}
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {field === "confirmPassword"
+                  ? "Confirm Password"
+                  : field.charAt(0).toUpperCase() + field.slice(1)}
               </label>
               <input
                 id={field}
                 name={field}
-                type={field.includes("password") ? "password" : "text"}
-                value={form[field]}
+                value={form[field as keyof FormFields] || ""}
+                type={
+                  field.includes("password")
+                    ? "password"
+                    : field === "email"
+                    ? "email"
+                    : "text"
+                }
                 onChange={handleChange}
                 required
                 className="mt-1 p-2 border rounded bg-white dark:bg-black dark:border-gray-700"
